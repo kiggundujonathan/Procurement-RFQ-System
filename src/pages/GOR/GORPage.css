@@ -1,0 +1,77 @@
+.gor-page {
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+.gor-title {
+  font-size: 38px;
+  font-weight: 700;
+  color: #1f2937;
+  margin-bottom: 10px;
+}
+
+.gor-subtitle {
+  color: #64748b;
+  font-size: 18px;
+  margin-bottom: 30px;
+}
+
+.gor-card {
+  background: #ffffff;
+  border-radius: 12px;
+  padding: 25px;
+  margin-bottom: 25px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+}
+
+.gor-section-title {
+  color: #3da5f4;
+  margin-bottom: 20px;
+}
+
+.gor-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 20px;
+}
+
+.form-input,
+.form-select {
+  width: 100%;
+  height: 45px;
+  border: 1px solid #d1d5db;
+  border-radius: 8px;
+  padding: 0 12px;
+  box-sizing: border-box;
+}
+
+.form-input:focus,
+.form-select:focus {
+  outline: none;
+  border-color: #3da5f4;
+}
+
+.item-card {
+  border: 1px solid #e5e7eb;
+  border-radius: 10px;
+  padding: 20px;
+  margin-bottom: 15px;
+}
+
+.primary-btn {
+  background: #3da5f4;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  padding: 12px 24px;
+  cursor: pointer;
+}
+
+.secondary-btn {
+  background: white;
+  color: #3da5f4;
+  border: 1px solid #3da5f4;
+  border-radius: 8px;
+  padding: 12px 24px;
+  cursor: pointer;
+}

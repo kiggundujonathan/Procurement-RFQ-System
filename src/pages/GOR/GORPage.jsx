@@ -3,6 +3,8 @@ import { useContext } from "react";
 import { RequestContext } from "../../context/RequestContext";
 import { useLocation } from "react-router-dom";
 import { useNavigate } from "react-router-dom";
+import "./GORPage.css";
+import { FaTrash } from "react-icons/fa";
 
 export default function GORPage() {
 const navigate = useNavigate();
@@ -44,21 +46,32 @@ const isEditing = editIndex !== null;
     dateSubmitted: "",
    // budgetCode: "",
     status: "Draft",
-    items: [
-      { description: "", quantity: "", cost: "" }
-    ],
+   items: [
+  {
+    name: "",
+    category: "",
+    description: "",
+    quantity: "",
+    cost: "",
+  }
+],
     attachment: null,
     Comments: []
   });
 
   // Initialize auto fields
-  useEffect(() => {
-    setForm((prev) => ({
-      ...prev,
-      requestId: generateRequestId(),
-      dateSubmitted: new Date().toLocaleDateString(),
-    }));
-  }, []);
+
+useEffect(() => {
+  setForm((prev) => ({
+    ...prev,
+    requestId: generateRequestId(),
+    dateSubmitted: new Date().toLocaleDateString("en-GB", {
+      day: "2-digit",
+      month: "short",
+      year: "numeric",
+    }),
+  }));
+}, []);
 
 useEffect(() => {
   if (editIndex !== null && requests[editIndex]) {
@@ -87,12 +100,21 @@ useEffect(() => {
   };
   
   // Add item
-  const addItem = () => {
-    setForm({
-      ...form,
-      items: [...form.items, { description: "", quantity: "", cost: "" }]
-    });
-  };
+const addItem = () => {
+  setForm({
+    ...form,
+    items: [
+      ...form.items,
+      {
+        name: "",
+        category: "",
+        description: "",
+        quantity: "",
+        cost: ""
+      }
+    ]
+  });
+};
 
   // Remove item
   const removeItem = (index) => {
@@ -139,17 +161,97 @@ const handleFileChange = (e) => {
   reader.readAsDataURL(file);
 };
 const handleSubmit = (e) => {
+
   e.preventDefault();
+  
+  console.log(form);
+
+if (!form.requestTitle?.trim()) {
+    alert("Request Title is required.");
+    return;
+  }
+
+  if (
+    !form.projectCode?.trim() ||
+    !form.activityCode?.trim() ||
+    !form.paymentCode?.trim()
+  ) {
+    alert(
+      "Please complete all Budget Details."
+    );
+    return;
+  }
+
+  if (form.items.length === 0) {
+    alert("Please add at least one item.");
+    return;
+  }
+
+  for (let i = 0; i < form.items.length; i++) {
+    const item = form.items[i];
+
+    if (!item.name?.trim()) {
+      alert(
+        `Item ${i + 1}: Item Name is required.`
+      );
+      return;
+    }
+
+    if (!item.category) {
+      alert(
+        `Item ${i + 1}: Please select a Category.`
+      );
+      return;
+    }
+
+    if (!item.description?.trim()) {
+      alert(
+        `Item ${i + 1}: Description is required.`
+      );
+      return;
+    }
+
+    if (
+      !item.quantity ||
+      Number(item.quantity) <= 0
+    ) {
+      alert(
+        `Item ${i + 1}: Quantity must be greater than 0.`
+      );
+      return;
+    }
+
+    if (
+      !item.cost ||
+      Number(item.cost) <= 0
+    ) {
+      alert(
+        `Item ${i + 1}: Unit Cost must be greater than 0.`
+      );
+      return;
+    }
+  }
+
+  // SAVE REQUEST
 
   const submittedForm = {
     ...form,
     estimatedTotal: calculateTotal(),
 
-    // ALWAYS RESET STATUS WHEN EDITING
     status: "Draft",
     comments: [],
-    approvalHistory: []
+    approvalHistory: [],
   };
+
+  // const submittedForm = {
+  //   ...form,
+  //   estimatedTotal: calculateTotal(),
+
+  //   // ALWAYS RESET STATUS WHEN EDITING
+  //   status: "Draft",
+  //   comments: [],
+  //   approvalHistory: []
+  // };
 
   if (editIndex !== null) {
     // UPDATE existing
@@ -174,7 +276,12 @@ const handleSubmit = (e) => {
     requestor: loggedInUser.name,
     department: loggedInUser.department,
     // category: "",
-    dateSubmitted: new Date().toLocaleDateString(),
+    
+dateSubmitted: new Date().toLocaleDateString("en-GB", {
+  day: "2-digit",
+  month: "short",
+  year: "numeric",
+}),
     projectCode: "",
     activityCode: "",
     paymentCode: "",
@@ -185,244 +292,367 @@ const handleSubmit = (e) => {
   });
 };
   return (
-    <div className="page-container">
+  <div className="gor-page">
+    <h1 className="gor-title">
+      Goods Order Request
+    </h1>
 
-<h2>
-  {isEditing ? "Edit Request" : "Goods Order Request"}
-</h2>
+    <p className="gor-subtitle">
+      Submit a request for goods or items needed for work purposes.<br />
+      Please provide complete and accurate details to ensure prompt processing
+    </p>
 
-      <form onSubmit={handleSubmit} className="form-grid">
+    <form onSubmit={handleSubmit}>
 
-        {/* Request ID */}
-        <div>
-          <label>Request ID:</label><br />
-          <input value={form.requestId} disabled />
+      
+      {/* Request Information */}
+      <div className="gor-card">
+        <h3 className="gor-section-title">
+          Request Information
+        </h3>
+
+        <div className="gor-grid">
+          <div>
+            <label>Request ID</label>
+            <input
+              className="form-input"
+              value={form.requestId}
+              disabled
+            />
+          </div>
+
+          <div>
+            <label>Request Title</label>
+            <input
+              className="form-input"
+              name="requestTitle"
+              value={form.requestTitle}
+              onChange={handleChange}
+            />
+          </div>
+
+          <div>
+            <label>Requestor</label>
+            <input
+              className="form-input"
+              value={form.requestor}
+              disabled
+            />
+          </div>
+
+          <div>
+            <label>Department</label>
+            <input
+              className="form-input"
+              value={form.department}
+              disabled
+            />
+          </div>
+
+          <div>
+            <label>Date Submitted</label>
+            <input
+              className="form-input"
+              value={form.dateSubmitted}
+              disabled
+            />
+          </div>
         </div>
+      </div>
 
-        {/* Request Title */}
-        <div>
-          <label>Request Title:</label><br />
-          <input
-            type="text"
-            name="requestTitle"
-            value={form.requestTitle}
-            onChange={handleChange}
-            required
-          />
+      {/* Budget Details */}
+      <div className="gor-card">
+        <h3 className="gor-section-title">
+          Budget Details
+        </h3>
+
+        <div className="gor-grid">
+          <div>
+            <label>Project Code</label>
+
+            <input
+              className="form-input"
+              name="projectCode"
+              value={form.projectCode}
+              onChange={handleChange}
+            />
+          </div>
+
+          <div>
+            <label>Activity Code</label>
+
+            <input
+              className="form-input"
+              name="activityCode"
+              value={form.activityCode}
+              onChange={handleChange}
+            />
+          </div>
+
+          <div>
+            <label>Payment Code</label>
+
+            <input
+              className="form-input"
+              name="paymentCode"
+              value={form.paymentCode}
+              onChange={handleChange}
+            />
+          </div>
         </div>
+      </div>
 
-        {/* Requestor */}
-        <div>
-          <label>Requestor:</label><br />
-          <input value={form.requestor} disabled />
-        </div>
-
-        {/* Department */}
-        <div>
-          <label>Department:</label><br />
-          <input value={form.department} disabled />
-        </div>
-        {/* Date Submitted */}
-        <div>
-          <label>Date Submitted:</label><br />
-          <input value={form.dateSubmitted} disabled />
-        </div>
-<div className="full-width">
-        <h3>Budget Details</h3>
-</div>
-    <div>
-  <label>Project Area and Code:</label><br />
-  <input
-    type="text"
-    name="projectCode"
-    value={form.projectCode}
-    onChange={handleChange}
-    placeholder="e.g. 00000"
-    required
-  />
-</div>
-
-<div>
-  <label>Activity Code:</label><br />
-  <input
-    type="text"
-    name="activityCode"
-    value={form.activityCode}
-    onChange={handleChange}
-    placeholder="e.g. 00000"
-    required
-  />
-</div>
-
-<div>
-  <label>Payment Code:</label><br />
-  <input
-    type="text"
-    name="paymentCode"
-    value={form.paymentCode}
-    onChange={handleChange}
-    placeholder="e.g. 00000"
-    required
-  />
-</div>
-
-        {/* ITEMS SECTION */}
-        <h3>Items</h3>
+      {/* Items */}
+      <div className="gor-card">
+        <h3 className="gor-section-title">
+          Items
+        </h3>
 
         {form.items.map((item, index) => (
-          <div key={index} style={{
-            marginBottom: "10px",
-            border: "1px solid #ccc",
-            padding: "10px"
-          }}>
+              <div
+        key={index}
+        className="item-card"
+        style={{
+          position: "relative",
+        }}
+      >
+                {form.items.length > 1 && (
+  <button
+    type="button"
+    onClick={() => removeItem(index)}
+    style={{
+      position: "absolute",
+      top: "15px",
+      right: "15px",
+      border: "none",
+      background: "#FEE2E2",
+      color: "#DC2626",
+      width: "36px",
+      height: "36px",
+      borderRadius: "50%",
+      cursor: "pointer",
+      display: "flex",
+      alignItems: "center",
+      justifyContent: "center",
+    }}
+  >
+    <FaTrash />
+  </button>
+)}
+            <h4>
+              Item {index + 1}
+            </h4>
 
-             <div>
-              <label>Item Name:</label><br />
-              <input
-                type="text"
-                name="name"
-                value={item.name}
-                onChange={(e) => handleItemChange(index, e)}
-                required
-              />
+            <div className="gor-grid">
+              <div>
+                <label>Item Name</label>
+
+                <input
+                  className="form-input"
+                  type="text"
+                  name="name"
+                  value={item.name}
+                  onChange={(e) =>
+                    handleItemChange(
+                      index,
+                      e
+                    )
+                  }
+                />
+              </div>
+
+              <div>
+                <label>Category</label>
+
+                <select
+  className="form-select"
+  name="category"
+  value={item.category || ""}
+  onChange={(e) =>
+    handleItemChange(index, e)
+  }
+>
+  <option value="">
+    Select Category
+  </option>
+
+  <option value="ICT Equipment">
+    ICT Equipment
+  </option>
+
+  <option value="Office Supplies">
+    Office Supplies
+  </option>
+
+  <option value="Furniture">
+    Furniture
+  </option>
+
+  <option value="Vehicle Maintenance">
+    Vehicle Maintenance
+  </option>
+
+  <option value="Cleaning Materials">
+    Cleaning Materials
+  </option>
+
+  <option value="Other">
+    Other
+  </option>
+</select>
+              </div>
+
+              <div>
+                <label>
+                  Description
+                </label>
+
+                <input
+                  className="form-input"
+                  type="text"
+                  name="description"
+                  value={item.description}
+                  onChange={(e) =>
+                    handleItemChange(
+                      index,
+                      e
+                    )
+                  }
+                />
+              </div>
+
+              <div>
+                <label>
+                  Quantity
+                </label>
+
+                <input
+                  className="form-input"
+                  type="number"
+                  name="quantity"
+                  value={item.quantity}
+                  onChange={(e) =>
+                    handleItemChange(
+                      index,
+                      e
+                    )
+                  }
+                />
+              </div>
+
+              <div>
+                <label>
+                  Unit Cost
+                </label>
+
+                <input
+                  className="form-input"
+                  type="number"
+                  name="cost"
+                  value={item.cost}
+                  onChange={(e) =>
+                    handleItemChange(
+                      index,
+                      e
+                    )
+                  }
+                />
+              </div>
+
+              <div>
+                <label>
+                  Line Total
+                </label>
+
+                <input
+                  className="form-input"
+                  readOnly
+                  value={calculateItemTotal(
+                    item
+                  )}
+                />
+              </div>
             </div>
-          
-                    <label>Category</label><br />
-
-                    <select
-                      value={item.category}
-                      onChange={(e) =>
-                        handleItemChange(
-                          index,
-                          "category",
-                          e.target.value
-                        )
-                      }
-                    >
-                      <option value="">
-                        Select Category
-                      </option>
-
-                      <option value="ICT Equipment">
-                        ICT Equipment
-                      </option>
-
-                      <option value="Office Supplies">
-                        Office Supplies
-                      </option>
-
-                      <option value="Furniture">
-                        Furniture
-                      </option>
-
-                      <option value="Vehicle Maintenance">
-                        Vehicle Maintenance
-                      </option>
-
-                      <option value="Cleaning Materials">
-                        Cleaning Materials
-                      </option>
-
-                      <option value="Other">
-                        Other
-                      </option>
-                    </select>
-
-            <div>
-              <label>Item Description:</label><br />
-              <input
-                type="text"
-                name="description"
-                value={item.description}
-                onChange={(e) => handleItemChange(index, e)}
-                required
-              />
-            </div>
-
-            <div>
-              <label>Quantity:</label><br />
-              <input
-                type="number"
-                name="quantity"
-                value={item.quantity}
-                onChange={(e) => handleItemChange(index, e)}
-                required
-              />
-            </div>
-            
-            <div>
-              <label>Estimated Cost Per Item:</label><br />
-              <input
-                type="number"
-                name="cost"
-                value={item.cost}
-                onChange={(e) => handleItemChange(index, e)}
-                required
-              />
-            </div>
-             <div>
-              <label>Line Total</label><br />
-              <input
-                type="number"
-                value={calculateItemTotal(item)}
-                readOnly
-              />
-            </div>
-            <br />
-
-            {form.items.length > 1 && (
-              <button type="button" onClick={() => removeItem(index)}>
-                Remove Item
-              </button>
-            )}
           </div>
         ))}
 
-        <button type="button" onClick={addItem}>
-          Add Another Item
+        <button
+          type="button"
+          onClick={addItem}
+          className="secondary-btn"
+        >
+          + Add Another Item
+        </button>
+        
+      </div>
+      
+
+      {/* Financial Summary */}
+      <div className="gor-card">
+        <h3 className="gor-section-title">
+          Financial Summary
+        </h3>
+
+        <input
+          className="form-input"
+          disabled
+          value={`${calculateTotal().toLocaleString()} UGX`}
+        />
+      </div>
+
+      {/* Attachment */}
+      <div className="gor-card">
+        <h3 className="gor-section-title">
+          Attachment
+        </h3>
+
+        <input
+          type="file"
+          onChange={handleFileChange}
+        />
+
+        {form.attachment && (
+          <p>
+            Selected File:{" "}
+            {
+              form.attachment
+                .name
+            }
+          </p>
+        )}
+      </div>
+
+      {/* Actions */}
+      <div
+        style={{
+          display: "flex",
+          gap: "15px",
+        }}
+      >
+        <button
+          type="submit"
+          className="primary-btn"
+        >
+          {isEditing
+            ? "Update Request"
+            : "Submit Request"}
         </button>
 
-        {/* Estimated Total */}
-        <div>
-          <label>Estimated Total:</label><br />
-          <input value={calculateTotal()} disabled />
-        </div>
-
-        {/* Status */}
-        <div>
-          <label>Status:</label><br />
-          <input value={form.status} disabled />
-        </div>
-        <br /> 
-
-<h3>Attachment (Optional)</h3>
-
-<div style={{ marginBottom: "20px" }}>
-  <label>Upload File:</label><br />
-  <input type="file" onChange={handleFileChange} />
-</div>
-
-{form.attachment && (
-  <p style={{ marginBottom: "20px" }}>
-    Selected File: {form.attachment.name}
-  </p>
-)}
-
-<button type="submit" style={{ marginTop: "25px" }}>
-  {isEditing ? "Update Request" : "Submit Request"}
-</button>
-
-  {isEditing && (
-    <button
-      type="button"
-      onClick={() => navigate("/my-requests")}
-      style={{ marginLeft: "10px" }}
-    >
-      Cancel
-    </button>
-  )}
-      </form>
-
-    </div>
-  );
+        {isEditing && (
+          <button
+            type="button"
+            className="secondary-btn"
+            onClick={() =>
+              navigate(
+                "/my-requests"
+              )
+            }
+          >
+            Cancel
+          </button>
+        )}
+      </div>
+    </form>
+  </div>
+);
 }

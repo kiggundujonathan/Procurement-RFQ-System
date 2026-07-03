@@ -1,31 +1,27 @@
+
 import { useContext, useState } from "react";
 import { RequestContext } from "../context/RequestContext";
 import { useNavigate } from "react-router-dom";
+import {
+  FiSearch,
+  FiEye,
+  FiEdit,
+  FiTrash2,
+} from "react-icons/fi";
 
 export default function MyRequests() {
   const navigate = useNavigate();
-
   const { requests, setRequests } = useContext(RequestContext);
-
-  const [selectedRequest, setSelectedRequest] = useState(null);
-
-  // View request
-  const handleView = (req) => {
-    setSelectedRequest(req);
-  };
-
-  // Download attachment
-  const handleDownload = (attachment) => {
-    if (!attachment || !attachment.data) {
-      alert("No file available");
-      return;
-    }
-
-    const a = document.createElement("a");
-    a.href = attachment.data;
-    a.download = attachment.name;
-    a.click();
-  };
+  const [search, setSearch] = useState("");
+  const filteredRequests = requests.filter(
+  (req) =>
+    req.requestId
+      .toLowerCase()
+      .includes(search.toLowerCase()) ||
+    req.requestTitle
+      .toLowerCase()
+      .includes(search.toLowerCase())
+);
 
   // Delete request
   const handleDelete = (index) => {
@@ -39,203 +35,325 @@ export default function MyRequests() {
   };
 
   return (
-    <div>
-      <h2>My Requests</h2>
-
-      {requests.length === 0 ? (
-        <p>No requests created yet.</p>
-      ) : (
-        <>
-          <table border="1" cellPadding="8">
-            <thead>
-              <tr>
-                <th>Request ID</th>
-                <th>Title</th>
-                <th>Category</th>
-                <th>Total</th>
-                <th>Status</th>
-                <th>Actions</th>
-              </tr>
-            </thead>
-
-            <tbody>
-              {requests.map((req, index) => (
-                <tr key={index}>
-                  <td>{req.requestId}</td>
-                  <td>{req.requestTitle}</td>
-                  <td>{req.category}</td>
-                  <td>{req.estimatedTotal}</td>
-                  <td>{req.status}</td>
-
-                  <td>
-                    <button onClick={() => navigate("/request-details", {
-                   state: { request: req }})}>View</button>
-
-                    {req.status === "Draft" ||
-                    req.status === "Budget Rejected" ||
-                    req.status === "Supervisor Rejected" ||
-                    req.status === "Procurement Rejected" ? (
-                      <button onClick={() => handleEdit(index)}>
-                        Edit
-                      </button>
-                    ) : (
-                      <button disabled>Edit</button>
-                    )}
-
-                    {req.status === "Draft" ? (
-                      <button onClick={() => handleDelete(index)}>
-                        Delete
-                      </button>
-                    ) : (
-                      <button disabled>Delete</button>
-                    )}
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-
-          {/* VIEW MODAL */}
-
-          {selectedRequest && (
-            <div
-              style={{
-                marginTop: "20px",
-                border: "1px solid #ccc",
-                padding: "20px",
-                backgroundColor: "#f9f9f9"
-              }}
-            >
-              <h3>{selectedRequest.requestTitle}</h3>
-
-              <p>
-                <strong>Request ID:</strong>{" "}
-                {selectedRequest.requestId}
-              </p>
-
-              <p>
-                <strong>Status:</strong>{" "}
-                {selectedRequest.status}
-              </p>
-
-              <p>
-                <strong>Requestor:</strong>{" "}
-                {selectedRequest.requestor}
-              </p>
-
-              <p>
-                <strong>Project Code:</strong>{" "}
-                {selectedRequest.projectCode}
-              </p>
-
-              <p>
-                <strong>Activity Code:</strong>{" "}
-                {selectedRequest.activityCode}
-              </p>
-
-              <p>
-                <strong>Date Submitted:</strong>{" "}
-                {selectedRequest.dateSubmitted}
-              </p>
-
-              <p>
-                <strong>Estimated Total:</strong>{" "}
-                {selectedRequest.estimatedTotal}
-              </p>
-
-              <h3>Items</h3>
-
-{selectedRequest.items?.map((item, index) => {
-  const lineTotal =
-    (Number(item.quantity) || 0) *
-    (Number(item.cost) || 0);
-
-  return (
-    <div
-      key={index}
+  <div>
+    <h1
       style={{
-        borderBottom: "1px solid #ddd",
-        marginBottom: "10px"
+        color: "#1F2937",
+        marginBottom: "10px",
       }}
     >
-      <h4>Item {index + 1}</h4>
+      My Requests
+    </h1>
 
-      <p>
-        <strong>Name:</strong> {item.name}
-      </p>
+    <p
+      style={{
+        color: "#64748B",
+        marginBottom: "25px",
+      }}
+    >
+      View and manage your submitted requests.
+    </p>
 
-      <p>
-        <strong>Description:</strong> {item.description}
-      </p>
+    {/* Statistics */}
 
-      <p>
-        <strong>Quantity:</strong> {item.quantity}
-      </p>
+    <div
+      style={{
+        display: "grid",
+        gridTemplateColumns:
+          "repeat(auto-fit, minmax(200px, 1fr))",
+        gap: "15px",
+        marginBottom: "25px",
+      }}
+    >
+      <StatCard
+        title="Total Requests"
+        value={requests.length}
+      />
 
-      <p>
-        <strong>Unit Cost:</strong>{" "}
-        {Number(item.cost).toLocaleString()}
-      </p>
+      <StatCard
+        title="Draft"
+        value={
+          requests.filter(
+            (r) => r.status === "Draft"
+          ).length
+        }
+      />
 
-      <p>
-        <strong>Line Total:</strong>{" "}
-        {lineTotal.toLocaleString()}
-      </p>
-      <h4>Financial Summary</h4>
+      <StatCard
+        title="Approved"
+        value={
+          requests.filter((r) =>
+            r.status.includes("Approved")
+          ).length
+        }
+      />
 
-<p>
-  <strong>Estimated Total:</strong>{" "}
-  {Number(
-    selectedRequest.estimatedTotal
-  ).toLocaleString()}
-</p>
+      <StatCard
+        title="Rejected"
+        value={
+          requests.filter((r) =>
+            r.status.includes("Rejected")
+          ).length
+        }
+      />
     </div>
-  );
-})}
 
-              <h4>Comments</h4>
+    {/* Search */}
 
-              {selectedRequest.comments?.length > 0 ? (
-                selectedRequest.comments.map((c, i) => (
-                  <p key={i}>
-                    <strong>{c.by}</strong>: {c.text}
-                    <br />
-                    <small>{c.date}</small>
-                  </p>
-                ))
-              ) : (
-                <p>No comments available.</p>
-              )}
+    <div
+      style={{
+        position: "relative",
+        marginBottom: "20px",
+      }}
+    >
+      <FiSearch
+        style={{
+          position: "absolute",
+          left: "15px",
+          top: "14px",
+          color: "#94A3B8",
+        }}
+      />
 
-              <h4>Attachment</h4>
+      <input
+        type="text"
+        placeholder="Search Request ID or Title..."
+        value={search}
+        onChange={(e) =>
+          setSearch(e.target.value)
+        }
+        style={{
+          width: "100%",
+          boxSizing: "border-box",
+          padding: "12px 12px 12px 40px",
+          borderRadius: "10px",
+          border: "1px solid #D1D5DB",
+        }}
+      />
+    </div>
 
-              <p>
-                {selectedRequest.attachment?.name ||
-                  "No attachment uploaded"}
-              </p>
+    {/* Table */}
 
-              {selectedRequest.attachment?.data && (
-                <button
-                  onClick={() =>
-                    handleDownload(selectedRequest.attachment)
-                  }
-                >
-                  Download Attachment
-                </button>
-              )}
+    <div
+      style={{
+        background: "#FFFFFF",
+        borderRadius: "12px",
+        overflow: "hidden",
+        boxShadow:
+          "0 2px 8px rgba(0,0,0,0.08)",
+      }}
+    >
+      <table
+        style={{
+          width: "100%",
+          borderCollapse: "collapse",
+        }}
+      >
+        <thead>
+          <tr
+            style={{
+              background: "#F8FAFC",
+            }}
+          >
+            <th style={thStyle}>Request ID</th>
+            <th style={thStyle}>Title</th>
+            <th style={thStyle}>Category</th>
+            <th style={thStyle}>Amount</th>
+            <th style={thStyle}>Status</th>
+            <th style={thStyle}>Actions</th>
+          </tr>
+        </thead>
 
-              <br />
-              <br />
+        <tbody>
+          {filteredRequests.map(
+            (req, index) => (
+              <tr key={index}>
+                <td style={tdStyle}>
+                  {req.requestId}
+                </td>
 
-              <button
-                onClick={() => setSelectedRequest(null)}
-              >
-                Close
-              </button>
-            </div>
+                <td style={tdStyle}>
+                  {req.requestTitle}
+                </td>
+
+                <td style={tdStyle}>
+                  {req.items?.[0]?.category ||
+                    "N/A"}
+                </td>
+
+                <td style={tdStyle}>
+                  UGX{" "}
+                  {Number(
+                    req.estimatedTotal
+                  ).toLocaleString()}
+                </td>
+
+                <td style={tdStyle}>
+                  <StatusBadge
+                    status={req.status}
+                  />
+                </td>
+
+                <td style={tdStyle}>
+                  <div
+                    style={{
+                      display: "flex",
+                      gap: "8px",
+                    }}
+                  >
+                    <button
+                      style={viewBtn}
+                      onClick={() =>
+                        navigate(
+                          "/request-details",
+                          {
+                            state: {
+                              requestId:
+                                req.requestId,
+                            },
+                          }
+                        )
+                      }
+                    >
+                      <FiEye />
+                    </button>
+
+                    {(req.status ===
+                      "Draft" ||
+                      req.status ===
+                        "Budget Rejected" ||
+                      req.status ===
+                        "Supervisor Rejected" ||
+                      req.status ===
+                        "Procurement Rejected") && (
+                      <button
+                        style={editBtn}
+                        onClick={() =>
+                          handleEdit(index)
+                        }
+                      >
+                        <FiEdit />
+                      </button>
+                    )}
+
+                    {req.status ===
+                      "Draft" && (
+                      <button
+                        style={deleteBtn}
+                        onClick={() =>
+                          handleDelete(index)
+                        }
+                      >
+                        <FiTrash2 />
+                      </button>
+                    )}
+                  </div>
+                </td>
+              </tr>
+            )
           )}
-        </>
-      )}
+        </tbody>
+      </table>
+    </div>
+  </div>
+);
+}
+function StatusBadge({ status }) {
+  let background = "#FEF3C7";
+  let color = "#B45309";
+
+  if (status.includes("Approved")) {
+    background = "#DCFCE7";
+    color = "#15803D";
+  }
+
+  if (status.includes("Rejected")) {
+    background = "#FEE2E2";
+    color = "#B91C1C";
+  }
+
+  return (
+    <span
+      style={{
+        background,
+        color,
+        padding: "6px 12px",
+        borderRadius: "20px",
+        fontWeight: "600",
+        fontSize: "13px",
+      }}
+    >
+      {status}
+    </span>
+  );
+}
+
+function StatCard({ title, value }) {
+  return (
+    <div
+      style={{
+        background: "#FFFFFF",
+        padding: "20px",
+        borderRadius: "12px",
+        boxShadow:
+          "0 2px 8px rgba(0,0,0,0.08)",
+      }}
+    >
+      <p
+        style={{
+          margin: 0,
+          color: "#64748B",
+        }}
+      >
+        {title}
+      </p>
+
+      <h2
+        style={{
+          marginTop: "10px",
+          color: "#3DA5F4",
+        }}
+      >
+        {value}
+      </h2>
     </div>
   );
 }
+
+const thStyle = {
+  padding: "15px",
+  textAlign: "left",
+  borderBottom: "1px solid #E5E7EB",
+};
+
+const tdStyle = {
+  padding: "15px",
+  borderBottom: "1px solid #E5E7EB",
+};
+
+const viewBtn = {
+  background: "#DBEAFE",
+  color: "#2563EB",
+  border: "none",
+  borderRadius: "8px",
+  padding: "10px",
+  cursor: "pointer",
+};
+
+const editBtn = {
+  background: "#FEF3C7",
+  color: "#B45309",
+  border: "none",
+  borderRadius: "8px",
+  padding: "10px",
+  cursor: "pointer",
+};
+
+const deleteBtn = {
+  background: "#FEE2E2",
+  color: "#DC2626",
+  border: "none",
+  borderRadius: "8px",
+  padding: "10px",
+  cursor: "pointer",
+};

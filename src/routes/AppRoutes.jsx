@@ -1,16 +1,14 @@
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import Layout from "../components/layout/Layout";
+import Dashboard from "../pages/Dashboard";
 import FinanceReview from "../pages/FinanceReview";
 import GORPage from "../pages/GOR/GORPage";
 import MyRequests from "../pages/MyRequests";
 import SupervisorReview from "../pages/SupervisorReview";
 import ProcurementReview from "../pages/ProcurementReview";
 import RequestDetails from "../pages/RequestDetails";
-// Simple dashboard component
 
-function Dashboard() {
-  return <h2>Dashboard Page</h2>;
-}
+// Simple dashboard component
 
 export default function AppRoutes() {
   return (
